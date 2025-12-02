@@ -2,7 +2,7 @@ package dev.rohenkohl
 package advent
 
 val rangePattern = "(\\d+)-(\\d+)".r
-val duplicationPattern = "(\\d+)\\1".r
+val duplicationPattern = "(\\d+)\\1+".r
 val inputText = os.read(os.pwd / "input")
 
 @main
