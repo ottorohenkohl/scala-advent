@@ -1,7 +1,8 @@
 package types.advent
 
-import java.time.LocalDate
 import extension.mkString
+
+import java.time.LocalDate
 
 final case class Year private(value: Long):
   def mkString: String = value.mkString(getClass)

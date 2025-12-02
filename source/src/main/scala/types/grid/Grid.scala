@@ -1,6 +1,6 @@
 package types.grid
 
-import extension.{isZero, mkLines, mkString, mkPadded, asRows}
+import extension.*
 
 final class Grid private(val offset: Option[Cell], val values: Vector[Vector[Char]]):
   def mkString: String = (offset, values.map(_.mkString).mkLines.mkPadded).mkString(getClass)
