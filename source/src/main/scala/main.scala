@@ -1,11 +1,18 @@
 package dev.rohenkohl
 package advent
 
-val rangePattern = "(\\d+)-(\\d+)".r
-val duplicationPattern = "(\\d+)\\1+".r
-val inputText = os.read(os.pwd / "input")
+val filename = "input"
 
 @main
-def main(): Unit = println(rangePattern.findAllMatchIn(inputText)
-  .map(found => found.group(1).toLong to found.group(2).toLong).fold(Seq())(_ ++ _)
-  .filter(_.toString.matches(duplicationPattern.toString())).sum)
+def main(): Unit =
+  val inputLines = os.read.lines(os.pwd / filename)
+  val bankValues = inputLines.map(_.toCharArray.map(_.asDigit))
+  val indexedBanks = bankValues.map(_.zipWithIndex)
+
+  val highestLefts = indexedBanks.zipWithIndex.map(_._1.dropRight(1).maxBy(_._1))
+  val remainingRights = indexedBanks.zipWithIndex.map(bank => bank._1.drop(highestLefts(bank._2)._2 + 1))
+  val highestRights = remainingRights.zipWithIndex.map(_._1.maxBy(_._1))
+
+  val highestJoltages = highestLefts.map(_._1).zip(highestRights.map(_._1)).map(_.toList.mkString.toInt).sum
+
+  println(highestJoltages)
