@@ -1,18 +1,27 @@
 package dev.rohenkohl
 package advent
 
+import scala.annotation.tailrec
+
 val filename = "input"
 
 @main
 def main(): Unit =
-  val inputLines = os.read.lines(os.pwd / filename)
-  val bankValues = inputLines.map(_.toCharArray.map(_.asDigit))
-  val indexedBanks = bankValues.map(_.zipWithIndex)
+  val input = os.read.lines(os.pwd / filename)
 
-  val highestLefts = indexedBanks.zipWithIndex.map(_._1.dropRight(1).maxBy(_._1))
-  val remainingRights = indexedBanks.zipWithIndex.map(bank => bank._1.drop(highestLefts(bank._2)._2 + 1))
-  val highestRights = remainingRights.zipWithIndex.map(_._1.maxBy(_._1))
+  val batteries = input.map(_.zipWithIndex.map(digit => Battery(digit._2, digit._1.asDigit)))
+  val banks = batteries.zipWithIndex.map(battery => Bank(battery._2, battery._1))
 
-  val highestJoltages = highestLefts.map(_._1).zip(highestRights.map(_._1)).map(_.toList.mkString.toInt).sum
+  println(banks.map(bank => combinations(12, bank, List()).map(_.value).mkString.toLong).sum)
 
-  println(highestJoltages)
+@tailrec
+def combinations(batteries: Int, bank: Bank, accumulator: List[Battery]): List[Battery] = batteries match
+  case done if batteries == 0 => accumulator.reverse
+  case _ => accumulator match
+    case head :: _ => combinations(batteries - 1, bank, bank.batteriesAfter(head).highestBattery(batteries) :: accumulator)
+    case _ => combinations(batteries - 1, bank, bank.highestBattery(batteries) :: accumulator)
+
+case class Battery(position: Int, value: Long)
+case class Bank(position: Int, batteries: Seq[Battery]):
+  def highestBattery(position: Int): Battery = batteries.dropRight(position - 1).maxBy(_.value)
+  def batteriesAfter(battery: Battery): Bank = Bank(position, batteries.drop(battery.position + 1))
