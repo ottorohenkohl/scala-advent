@@ -1,3 +1,4 @@
+package dev.rohenkohl.advent
 package types.advent
 
 import extension.mkString

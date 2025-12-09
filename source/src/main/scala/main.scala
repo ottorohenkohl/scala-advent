@@ -1,27 +1,34 @@
 package dev.rohenkohl
 package advent
 
-import scala.annotation.tailrec
+import dev.rohenkohl.advent.types.grid.Grid
+
+import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
+import scala.collection.mutable.Map
 
 val filename = "input"
 
 @main
 def main(): Unit =
-  val input = os.read.lines(os.pwd / filename)
+  val grid: Grid = os.read(os.pwd / filename)
+  val marks: Map[(Int, Int), Int] = Map()
 
-  val batteries = input.map(_.zipWithIndex.map(digit => Battery(digit._2, digit._1.asDigit)))
-  val banks = batteries.zipWithIndex.map(battery => Bank(battery._2, battery._1))
+  val columns = grid.columns.indices
+  val cells = columns.flatMap(column => grid.rows.indices.map((_, column)))
 
-  println(banks.map(bank => combinations(12, bank, List()).map(_.value).mkString.toLong).sum)
+  cells.foreach(cell => mark(cell._1, cell._2, grid, marks))
+  marks.map(entry => (entry._1, entry._2 - 1))
 
-@tailrec
-def combinations(batteries: Int, bank: Bank, accumulator: List[Battery]): List[Battery] = batteries match
-  case done if batteries == 0 => accumulator.reverse
-  case _ => accumulator match
-    case head :: _ => combinations(batteries - 1, bank, bank.batteriesAfter(head).highestBattery(batteries) :: accumulator)
-    case _ => combinations(batteries - 1, bank, bank.highestBattery(batteries) :: accumulator)
+  println(marks.count(cell => grid.rows(cell._1._1)(cell._1._2) == '@' && cell._2 < 4))
 
-case class Battery(position: Int, value: Long)
-case class Bank(position: Int, batteries: Seq[Battery]):
-  def highestBattery(position: Int): Battery = batteries.dropRight(position - 1).maxBy(_.value)
-  def batteriesAfter(battery: Battery): Bank = Bank(position, batteries.drop(battery.position + 1))
+def mark(row: Int, column: Int, grid: Grid, marks: Map[(Int, Int), Int]): Unit =
+  if grid.rows(row)(column) != '@' then return
+
+  marks.put((row, column), marks.getOrElse((row, column), 0))
+
+  val columns = column - 1 to column + 1
+  val cells = columns.flatMap(column => (row - 1 to row + 1).map((_, column))).filterNot((row, column).equals)
+  val relevant = cells.filter(cell => grid.rows.indices.contains(cell._1) && grid.columns.indices.contains(cell._2))
+
+  relevant.foreach(cell => marks.put(cell, marks.getOrElse(cell, 0) + 1))

@@ -1,3 +1,4 @@
+package dev.rohenkohl.advent
 package types.grid
 
 import extension.{mkLines, mkPadded, mkString}
