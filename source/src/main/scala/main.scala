@@ -2,33 +2,32 @@ package dev.rohenkohl
 package advent
 
 import dev.rohenkohl.advent.types.grid.Grid
+import collection.mutable.Map
+import os.Path
 
-import java.time.LocalDateTime
-import java.time.temporal.ChronoUnit
-import scala.collection.mutable.Map
-
-val filename = "input"
+extension (char: Char)
+  def isPaperroll: Boolean = char == '@'
+extension (path: Path)
+  def inputFile: Path = path / "input"
+extension (map: Map[(Int, Int), Int])
+  def countedNeighbours: Map[(Int, Int), Int] = map.map(entry => (entry._1, entry._1.listNeighbours.map(map(_)).sum - 1))
+extension (point: (Int, Int))
+  def listNeighbours: Seq[(Int, Int)] = (point._1 - 1 to point._1 + 1).flatMap(row => (point._2 - 1 to point._2 + 1).map(column => (row, column)))
 
 @main
 def main(): Unit =
-  val grid: Grid = os.read(os.pwd / filename)
-  val marks: Map[(Int, Int), Int] = Map()
+  val grid: Grid = os.read(os.pwd.inputFile)
 
+  val rows = grid.rows.indices
   val columns = grid.columns.indices
-  val cells = columns.flatMap(column => grid.rows.indices.map((_, column)))
+  val cells = columns.flatMap(column => rows.map((_, column)))
 
-  cells.foreach(cell => mark(cell._1, cell._2, grid, marks))
-  marks.map(entry => (entry._1, entry._2 - 1))
+  val mapped = Map(cells.filter(point => grid.rows(point._1)(point._2).isPaperroll).map((_, 1)).toMap.toSeq: _*).withDefaultValue(0)
+  val initial = mapped.size
 
-  println(marks.count(cell => grid.rows(cell._1._1)(cell._1._2) == '@' && cell._2 < 4))
+  while true do
+    val countedNeighbours = mapped.countedNeighbours
 
-def mark(row: Int, column: Int, grid: Grid, marks: Map[(Int, Int), Int]): Unit =
-  if grid.rows(row)(column) != '@' then return
+    mapped.filterInPlace((key, _) => countedNeighbours(key) >= 4)
 
-  marks.put((row, column), marks.getOrElse((row, column), 0))
-
-  val columns = column - 1 to column + 1
-  val cells = columns.flatMap(column => (row - 1 to row + 1).map((_, column))).filterNot((row, column).equals)
-  val relevant = cells.filter(cell => grid.rows.indices.contains(cell._1) && grid.columns.indices.contains(cell._2))
-
-  relevant.foreach(cell => marks.put(cell, marks.getOrElse(cell, 0) + 1))
+    if countedNeighbours.size == mapped.size then return println(initial - mapped.size)
